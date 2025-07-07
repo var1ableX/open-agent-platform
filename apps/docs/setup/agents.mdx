@@ -3,10 +3,11 @@ title: 'Agents Setup'
 description: 'Deploy and configure your agents for Open Agent Platform'
 ---
 
-The first step in setting up Open Agent Platform is to deploy and configure your agents. To help with this, we're releasing two pre-built agents, customized specifically for Open Agent Platform:
+The first step in setting up Open Agent Platform is to deploy and configure your agents. To help with this, we're releasing three pre-built agents, customized specifically for Open Agent Platform:
 
 - [Tools Agent](https://github.com/langchain-ai/oap-langgraph-tools-agent)
 - [Supervisor Agent](https://github.com/langchain-ai/oap-agent-supervisor)
+- [Deep Research Agent](https://github.com/langchain-ai/oap-deep-researcher)
 
 ## Deploying Agents
 
@@ -15,6 +16,21 @@ To use these agents in your instance, you should:
 1. Clone the repositories
 2. Follow the instructions in the READMEs
 3. Deploy the agents to LangGraph Platform, or run `langgraph dev` to run the agents locally.
+
+## API Keys
+
+These agents will require API keys for models and in some cases for other features (like search tools). 
+As a developer, you can allow users to configure these API keys in the settings page on Open Agent Platform. 
+We've exposed `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, and `TAVILY_API_KEY` for use in our demo agents, but this is easily extendable by you for any custom agents.
+
+
+The keys that users set in this page will be passed to any agents as part of the runtime config, under the `apiKeys` configurable field.
+As a developer, you can choose to require users to bring their own API keys, or to fallback to the environment variables set in LangGraph Platform deployment itself.
+
+  <Tip>
+    When using the demo instance of OAP, the Tools Agent and Supervisor will first use any API keys set by the user in OAP, but will fall back to API Keys set by the LangChain team in the base deployments.
+    The Deep Researcher **requires** the user to set their own API keys in OAP on our demo instance. 
+  </Tip>
 
 ## Configuration
 
