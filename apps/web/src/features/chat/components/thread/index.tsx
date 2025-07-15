@@ -410,7 +410,7 @@ export function Thread() {
                   handleRegenerate={handleRegenerate}
                 />
               )}
-              {isLoading && !firstTokenReceived && <AssistantMessageLoading />}
+              {isLoading && <AssistantMessageLoading />}
               {errorMessage && (
                 <Alert variant="destructive">
                   <AlertCircle className="size-4" />
