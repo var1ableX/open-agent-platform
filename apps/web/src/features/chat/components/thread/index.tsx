@@ -220,7 +220,6 @@ export function Thread() {
     dragOver,
     handlePaste,
   } = useFileUpload();
-  const [firstTokenReceived, setFirstTokenReceived] = useState(false);
 
   const { apiKeys } = useApiKeys();
 
@@ -265,17 +264,6 @@ export function Thread() {
 
   // TODO: this should be part of the useStream hook
   const prevMessageLength = useRef(0);
-  useEffect(() => {
-    if (
-      messages.length !== prevMessageLength.current &&
-      messages?.length &&
-      messages[messages.length - 1].type === "ai"
-    ) {
-      setFirstTokenReceived(true);
-    }
-
-    prevMessageLength.current = messages.length;
-  }, [messages]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -291,7 +279,6 @@ export function Thread() {
       isLoading
     )
       return;
-    setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
@@ -346,7 +333,6 @@ export function Thread() {
 
     // Do this so the loading state is correct
     prevMessageLength.current = prevMessageLength.current - 1;
-    setFirstTokenReceived(false);
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
