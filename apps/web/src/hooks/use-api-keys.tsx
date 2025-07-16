@@ -35,7 +35,6 @@ export function useApiKeys() {
  */
 export function useHasApiKeys(): boolean {
   const { apiKeys } = useApiKeys();
-  
-  return Object.values(apiKeys).some(key => key && key.trim() !== "");
-}
 
+  return Object.values(apiKeys).some((key) => key && key.trim() !== "");
+}

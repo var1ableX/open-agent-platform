@@ -141,7 +141,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     const [agentId_, deploymentId_] = value.split(":");
     setAgentId(agentId_);
     setDeploymentId(deploymentId_);
-    
+
     // Check if the deployment requires API keys and show warning if none are set
     const deployment = getDeployments().find((d) => d.id === deploymentId_);
     if (deployment?.requiresApiKeys && !hasApiKeys) {
@@ -150,7 +150,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         {
           duration: 5000,
           richColors: true,
-        }
+        },
       );
     }
   };
@@ -221,6 +221,3 @@ export const useStreamContext = (): StreamContextType => {
 };
 
 export default StreamContext;
-
-
-
