@@ -6,6 +6,7 @@ import React, {
   ReactNode,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
@@ -23,6 +24,8 @@ import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useHasApiKeys } from "@/hooks/use-api-keys";
+import { checkApiKeysWarning } from "@/lib/agent-utils";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -115,6 +118,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const { session } = useAuthContext();
+  const hasApiKeys = useHasApiKeys();
+  const warningShownRef = useRef<string>("");
 
   useEffect(() => {
     if (value || !agents.length) {
@@ -125,6 +130,16 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
     }
   }, [agents]);
+
+  useEffect(() => {
+    if (agentId && deploymentId) {
+      const currentKey = `${agentId}:${deploymentId}`;
+      if (warningShownRef.current !== currentKey) {
+        checkApiKeysWarning(deploymentId, hasApiKeys);
+        warningShownRef.current = currentKey;
+      }
+    }
+  }, [agentId, deploymentId, hasApiKeys]);
 
   const handleValueChange = (v: string) => {
     setValue(v);
