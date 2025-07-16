@@ -141,6 +141,18 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     const [agentId_, deploymentId_] = value.split(":");
     setAgentId(agentId_);
     setDeploymentId(deploymentId_);
+    
+    // Check if the deployment requires API keys and show warning if none are set
+    const deployment = getDeployments().find((d) => d.id === deploymentId_);
+    if (deployment?.requiresApiKeys && !hasApiKeys) {
+      toast.warning(
+        "This agent requires all necessary API keys to be set in the Settings page under your Account",
+        {
+          duration: 5000,
+          richColors: true,
+        }
+      );
+    }
   };
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
@@ -209,5 +221,6 @@ export const useStreamContext = (): StreamContextType => {
 };
 
 export default StreamContext;
+
 
 
