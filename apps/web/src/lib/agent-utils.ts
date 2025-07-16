@@ -1,6 +1,7 @@
 import { Agent } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
+import { toast } from "sonner";
 
 /**
  * Determines if an agent is the user's default agent.
@@ -112,4 +113,17 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
       return acc;
     }, {}),
   );
+}
+
+export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
+  const deployment = getDeployments().find((d) => d.id === deploymentId);
+  if (deployment?.requiresApiKeys && !hasApiKeys) {
+    toast.warning(
+      "This agent requires all necessary API keys to be set in the Settings page under your Account",
+      {
+        duration: 10000,
+        richColors: true,
+      },
+    );
+  }
 }

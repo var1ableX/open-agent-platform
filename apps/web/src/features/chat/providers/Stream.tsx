@@ -6,6 +6,7 @@ import React, {
   ReactNode,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
@@ -24,6 +25,7 @@ import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
+import { checkApiKeysWarning } from "@/lib/agent-utils";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -117,6 +119,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [open, setOpen] = useState(false);
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
+  const warningShownRef = useRef<string>("");
 
   useEffect(() => {
     if (value || !agents.length) {
@@ -127,6 +130,16 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
     }
   }, [agents]);
+
+  useEffect(() => {
+    if (agentId && deploymentId) {
+      const currentKey = `${agentId}:${deploymentId}`;
+      if (warningShownRef.current !== currentKey) {
+        checkApiKeysWarning(deploymentId, hasApiKeys);
+        warningShownRef.current = currentKey;
+      }
+    }
+  }, [agentId, deploymentId, hasApiKeys]);
 
   const handleValueChange = (v: string) => {
     setValue(v);
@@ -141,18 +154,6 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     const [agentId_, deploymentId_] = value.split(":");
     setAgentId(agentId_);
     setDeploymentId(deploymentId_);
-
-    // Check if the deployment requires API keys and show warning if none are set
-    const deployment = getDeployments().find((d) => d.id === deploymentId_);
-    if (deployment?.requiresApiKeys && !hasApiKeys) {
-      toast.warning(
-        "This agent requires all necessary API keys to be set in the Settings page under your Account",
-        {
-          duration: 5000,
-          richColors: true,
-        },
-      );
-    }
   };
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
