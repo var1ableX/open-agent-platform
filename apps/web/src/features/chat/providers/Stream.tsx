@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useHasApiKeys } from "@/hooks/use-api-keys";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -207,3 +208,4 @@ export const useStreamContext = (): StreamContextType => {
 };
 
 export default StreamContext;
+
