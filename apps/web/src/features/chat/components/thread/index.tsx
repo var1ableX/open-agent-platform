@@ -262,9 +262,6 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  // TODO: this should be part of the useStream hook
-  const prevMessageLength = useRef(0);
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
@@ -331,8 +328,6 @@ export function Thread() {
     if (!agentId) return;
     const { getAgentConfig } = useConfigStore.getState();
 
-    // Do this so the loading state is correct
-    prevMessageLength.current = prevMessageLength.current - 1;
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
