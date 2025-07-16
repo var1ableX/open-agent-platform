@@ -37,11 +37,12 @@ import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
-import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { isUserSpecifiedDefaultAgent, requiresApiKeysButNotSet } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
-import { useApiKeys } from "@/hooks/use-api-keys";
+import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -206,6 +207,7 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 
 export function Thread() {
   const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
@@ -222,6 +224,7 @@ export function Thread() {
   } = useFileUpload();
 
   const { apiKeys } = useApiKeys();
+  const hasApiKeys = useHasApiKeys();
 
   const { session } = useAuthContext();
 
@@ -495,15 +498,43 @@ export function Thread() {
                         Cancel
                       </Button>
                     ) : (
-                      <Button
-                        type="submit"
-                        className="ml-auto shadow-md transition-all"
-                        disabled={
-                          isLoading || (!hasInput && contentBlocks.length === 0)
-                        }
-                      >
-                        Send
-                      </Button>
+                      <div className="ml-auto">
+                        {requiresApiKeysButNotSet(deploymentId || "", hasApiKeys) ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-block">
+                                  <Button
+                                    type="submit"
+                                    className="shadow-md transition-all"
+                                    disabled={
+                                      isLoading || (!hasInput && contentBlocks.length === 0) ||
+                                      requiresApiKeysButNotSet(deploymentId || "", hasApiKeys)
+                                    }
+                                  >
+                                    Send
+                                  </Button>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  API keys are required but not set. Please provide them in the settings.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            type="submit"
+                            className="shadow-md transition-all"
+                            disabled={
+                              isLoading || (!hasInput && contentBlocks.length === 0)
+                            }
+                          >
+                            Send
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </form>

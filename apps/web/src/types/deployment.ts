@@ -31,4 +31,8 @@ export interface Deployment {
    * When true, users will be warned if they haven't configured their API keys.
    */
   requiresApiKeys?: boolean;
+  /**
+   * Custom message to display when API keys are required but not set.
+   */
+  apiKeysRequiredMessage?: string;
 }

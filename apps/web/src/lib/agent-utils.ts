@@ -115,15 +115,35 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
   );
 }
 
-export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
+/**
+ * Checks if API keys are required but not set for a deployment.
+ * @param deploymentId The deployment ID to check
+ * @param hasApiKeys Whether the user has API keys set
+ * @returns True if the deployment requires API keys but user doesn't have them
+ */
+export function requiresApiKeysButNotSet(deploymentId: string, hasApiKeys: boolean): boolean {
   const deployment = getDeployments().find((d) => d.id === deploymentId);
-  if (deployment?.requiresApiKeys && !hasApiKeys) {
-    toast.warning(
-      "This agent requires all necessary API keys to be set in the Settings page under your Account. Note: The default assistant requires OpenAI and Tavily API keys, make sure you generate and provide those.",
-      {
-        duration: 10000,
-        richColors: true,
-      },
-    );
+  return deployment?.requiresApiKeys === true && !hasApiKeys;
+}
+
+/**
+ * Shows a warning toast if API keys are required but not set.
+ * @param deploymentId The deployment ID to check
+ * @param hasApiKeys Whether the user has API keys set
+ */
+export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
+  if (requiresApiKeysButNotSet(deploymentId, hasApiKeys)) {
+    const deployment = getDeployments().find((d) => d.id === deploymentId);
+    const baseMessage = "This agent requires all necessary API keys to be set in the Settings page under your Account.";
+    
+    const customMessage = deployment?.apiKeysRequiredMessage;
+    const fullMessage = customMessage 
+      ? `${baseMessage}\n\n${customMessage}`
+      : baseMessage;
+
+    toast.error(fullMessage, {
+      duration: Infinity,
+      richColors: true,
+    });
   }
 }
