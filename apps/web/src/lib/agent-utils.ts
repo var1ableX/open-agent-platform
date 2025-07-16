@@ -2,6 +2,7 @@ import { Agent } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
+import React from "react";
 
 /**
  * Determines if an agent is the user's default agent.
@@ -115,14 +116,55 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
   );
 }
 
-export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
+/**
+ * Checks if API keys are required but not set for a deployment.
+ * @param deploymentId The deployment ID to check
+ * @param hasApiKeys Whether the user has API keys set
+ * @returns True if the deployment requires API keys but user doesn't have them
+ */
+export function requiresApiKeysButNotSet(
+  deploymentId: string,
+  hasApiKeys: boolean,
+): boolean {
   const deployment = getDeployments().find((d) => d.id === deploymentId);
-  if (deployment?.requiresApiKeys && !hasApiKeys) {
-    toast.warning(
-      "This agent requires all necessary API keys to be set in the Settings page under your Account",
+  return deployment?.requiresApiKeys === true && !hasApiKeys;
+}
+
+/**
+ * Shows a warning toast if API keys are required but not set.
+ * @param deploymentId The deployment ID to check
+ * @param hasApiKeys Whether the user has API keys set
+ */
+export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
+  if (requiresApiKeysButNotSet(deploymentId, hasApiKeys)) {
+    const deployment = getDeployments().find((d) => d.id === deploymentId);
+    const baseMessage =
+      "This agent requires all necessary API keys to be set in the Settings page under your Account.";
+
+    const customMessage = deployment?.apiKeysRequiredMessage;
+    const fullMessage = customMessage
+      ? `${baseMessage}\n\n${customMessage}`
+      : baseMessage;
+
+    toast.error(
+      React.createElement(
+        "div",
+        { className: "space-y-2" },
+        React.createElement("p", null, fullMessage),
+        React.createElement(
+          "a",
+          {
+            href: "/settings",
+            className:
+              "inline-flex items-center text-sm font-bold hover:text-red-900 underline",
+          },
+          "Go to Settings →",
+        ),
+      ),
       {
-        duration: 10000,
+        duration: 60000,
         richColors: true,
+        closeButton: false,
       },
     );
   }
