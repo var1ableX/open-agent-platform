@@ -2,6 +2,7 @@ import { Agent } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
+import React from "react";
 
 /**
  * Determines if an agent is the user's default agent.
@@ -145,9 +146,26 @@ export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
       ? `${baseMessage}\n\n${customMessage}`
       : baseMessage;
 
-    toast.error(fullMessage, {
-      duration: Infinity,
-      richColors: true,
-    });
+    toast.error(
+      React.createElement(
+        "div",
+        { className: "space-y-2" },
+        React.createElement("p", null, fullMessage),
+        React.createElement(
+          "a",
+          {
+            href: "/settings",
+            className:
+              "inline-flex items-center text-sm font-bold hover:text-red-900 underline",
+          },
+          "Go to Settings →",
+        ),
+      ),
+      {
+        duration: 60000,
+        richColors: true,
+        closeButton: false,
+      },
+    );
   }
 }
