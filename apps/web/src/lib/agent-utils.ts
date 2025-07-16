@@ -121,7 +121,10 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
  * @param hasApiKeys Whether the user has API keys set
  * @returns True if the deployment requires API keys but user doesn't have them
  */
-export function requiresApiKeysButNotSet(deploymentId: string, hasApiKeys: boolean): boolean {
+export function requiresApiKeysButNotSet(
+  deploymentId: string,
+  hasApiKeys: boolean,
+): boolean {
   const deployment = getDeployments().find((d) => d.id === deploymentId);
   return deployment?.requiresApiKeys === true && !hasApiKeys;
 }
@@ -134,10 +137,11 @@ export function requiresApiKeysButNotSet(deploymentId: string, hasApiKeys: boole
 export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
   if (requiresApiKeysButNotSet(deploymentId, hasApiKeys)) {
     const deployment = getDeployments().find((d) => d.id === deploymentId);
-    const baseMessage = "This agent requires all necessary API keys to be set in the Settings page under your Account.";
-    
+    const baseMessage =
+      "This agent requires all necessary API keys to be set in the Settings page under your Account.";
+
     const customMessage = deployment?.apiKeysRequiredMessage;
-    const fullMessage = customMessage 
+    const fullMessage = customMessage
       ? `${baseMessage}\n\n${customMessage}`
       : baseMessage;
 

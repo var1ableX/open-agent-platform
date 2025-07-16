@@ -37,12 +37,20 @@ import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
-import { isUserSpecifiedDefaultAgent, requiresApiKeysButNotSet } from "@/lib/agent-utils";
+import {
+  isUserSpecifiedDefaultAgent,
+  requiresApiKeysButNotSet,
+} from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -499,7 +507,10 @@ export function Thread() {
                       </Button>
                     ) : (
                       <div className="ml-auto">
-                        {requiresApiKeysButNotSet(deploymentId || "", hasApiKeys) ? (
+                        {requiresApiKeysButNotSet(
+                          deploymentId || "",
+                          hasApiKeys,
+                        ) ? (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -508,8 +519,13 @@ export function Thread() {
                                     type="submit"
                                     className="shadow-md transition-all"
                                     disabled={
-                                      isLoading || (!hasInput && contentBlocks.length === 0) ||
-                                      requiresApiKeysButNotSet(deploymentId || "", hasApiKeys)
+                                      isLoading ||
+                                      (!hasInput &&
+                                        contentBlocks.length === 0) ||
+                                      requiresApiKeysButNotSet(
+                                        deploymentId || "",
+                                        hasApiKeys,
+                                      )
                                     }
                                   >
                                     Send
@@ -518,7 +534,8 @@ export function Thread() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  API keys are required but not set. Please provide them in the settings.
+                                  API keys are required but not set. Please
+                                  provide them in the settings.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -528,7 +545,8 @@ export function Thread() {
                             type="submit"
                             className="shadow-md transition-all"
                             disabled={
-                              isLoading || (!hasInput && contentBlocks.length === 0)
+                              isLoading ||
+                              (!hasInput && contentBlocks.length === 0)
                             }
                           >
                             Send
