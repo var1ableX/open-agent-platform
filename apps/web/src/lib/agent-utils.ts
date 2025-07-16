@@ -119,7 +119,7 @@ export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
   const deployment = getDeployments().find((d) => d.id === deploymentId);
   if (deployment?.requiresApiKeys && !hasApiKeys) {
     toast.warning(
-      "This agent requires all necessary API keys to be set in the Settings page under your Account",
+      "This agent requires all necessary API keys to be set in the Settings page under your Account. Note: The default assistant requires OpenAI and Tavily API keys, make sure you generate and provide those.",
       {
         duration: 10000,
         richColors: true,
