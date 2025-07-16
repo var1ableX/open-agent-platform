@@ -26,4 +26,10 @@ export interface Deployment {
    * and it should be the same deployment that isDefault is set to true on.
    */
   defaultGraphId?: string;
+  /**
+   * Whether this deployment requires API keys to be set. Defaults to false.
+   * When true, users will be warned if they haven't configured their API keys.
+   */
+  requiresApiKeys?: boolean;
 }
+
