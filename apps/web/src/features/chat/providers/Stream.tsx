@@ -116,6 +116,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const { session } = useAuthContext();
+  const hasApiKeys = useHasApiKeys();
 
   useEffect(() => {
     if (value || !agents.length) {
@@ -208,4 +209,5 @@ export const useStreamContext = (): StreamContextType => {
 };
 
 export default StreamContext;
+
 
