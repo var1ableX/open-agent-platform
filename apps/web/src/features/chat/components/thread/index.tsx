@@ -216,6 +216,7 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 export function Thread() {
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
+  const [threadId] = useQueryState("threadId");
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
@@ -368,53 +369,66 @@ export function Thread() {
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
-            !hasMessages && "mt-[25vh] flex flex-col items-stretch",
-            hasMessages && "grid grid-rows-[1fr_auto]",
+            !hasMessages &&
+              !threadId &&
+              "mt-[25vh] flex flex-col items-stretch",
+            (hasMessages || threadId) && "grid grid-rows-[1fr_auto]",
           )}
           contentClassName="pt-8 pb-16 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
-              {messages
-                .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
-                .map((message, index) =>
-                  message.type === "human" ? (
-                    <HumanMessage
-                      key={message.id || `${message.type}-${index}`}
-                      message={message}
-                      isLoading={isLoading}
-                    />
-                  ) : (
+              {!hasMessages && threadId ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="text-muted-foreground flex items-center gap-2">
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <span>Loading thread...</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {messages
+                    .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
+                    .map((message, index) =>
+                      message.type === "human" ? (
+                        <HumanMessage
+                          key={message.id || `${message.type}-${index}`}
+                          message={message}
+                          isLoading={isLoading}
+                        />
+                      ) : (
+                        <AssistantMessage
+                          key={message.id || `${message.type}-${index}`}
+                          message={message}
+                          isLoading={isLoading}
+                          handleRegenerate={handleRegenerate}
+                        />
+                      ),
+                    )}
+                  {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
+                      We need to render it outside of the messages list, since there are no messages to render */}
+                  {hasNoAIOrToolMessages && !!stream.interrupt && (
                     <AssistantMessage
-                      key={message.id || `${message.type}-${index}`}
-                      message={message}
+                      key="interrupt-msg"
+                      message={undefined}
                       isLoading={isLoading}
                       handleRegenerate={handleRegenerate}
                     />
-                  ),
-                )}
-              {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
-                    We need to render it outside of the messages list, since there are no messages to render */}
-              {hasNoAIOrToolMessages && !!stream.interrupt && (
-                <AssistantMessage
-                  key="interrupt-msg"
-                  message={undefined}
-                  isLoading={isLoading}
-                  handleRegenerate={handleRegenerate}
-                />
-              )}
-              {isLoading && <AssistantMessageLoading />}
-              {errorMessage && (
-                <Alert variant="destructive">
-                  <AlertCircle className="size-4" />
-                  <AlertTitle>An error occurred:</AlertTitle>
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
+                  )}
+                  {isLoading && <AssistantMessageLoading />}
+                  {errorMessage && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="size-4" />
+                      <AlertTitle>An error occurred:</AlertTitle>
+                      <AlertDescription>{errorMessage}</AlertDescription>
+                    </Alert>
+                  )}
+                </>
               )}
             </>
           }
           footer={
             <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
-              {!hasMessages && (
+              {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                   <h1 className="text-2xl font-semibold tracking-tight">
