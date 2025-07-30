@@ -255,15 +255,6 @@ export function ConfigField({
             <SelectValue placeholder={placeholder || "Select an option"} />
           </SelectTrigger>
           <SelectContent>
-            {/* Add a placeholder/default option if needed */}
-            {placeholder && (
-              <SelectItem
-                value=""
-                disabled
-              >
-                {placeholder}
-              </SelectItem>
-            )}
             {options.map((option) => (
               <SelectItem
                 key={option.value}
