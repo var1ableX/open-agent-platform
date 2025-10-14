@@ -121,7 +121,7 @@ export const ConfigurationSidebar = forwardRef<
   HTMLDivElement,
   AIConfigPanelProps
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
-  const { configsByAgentId, resetConfig } = useConfigStore();
+  const { resetConfig, getAgentConfig } = useConfigStore();
   const { tools, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
@@ -203,7 +203,7 @@ export const ConfigurationSidebar = forwardRef<
       const newAgent = await createAgent(deploymentId, selectedAgent.graph_id, {
         name: newName,
         description: newDescription,
-        config: configsByAgentId[agentId],
+        config: getAgentConfig(agentId),
       });
       if (!newAgent) {
         toast.error("Failed to create agent", { richColors: true });
@@ -220,7 +220,7 @@ export const ConfigurationSidebar = forwardRef<
     }
 
     const updatedAgent = await updateAgent(agentId, deploymentId, {
-      config: configsByAgentId[agentId],
+      config: getAgentConfig(agentId),
     });
     if (!updatedAgent) {
       toast.error("Failed to update agent configuration");
