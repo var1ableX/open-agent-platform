@@ -10,12 +10,12 @@ Open Agent Platform provides a modern, web-based interface for creating, managin
 
 ## Key Features
 
-- **Agent Management**: Build, configure, and interact with agents through an intuitive interface.
-- **RAG Integration**: First-class support for Retrieval Augmented Generation with [LangConnect](https://github.com/langchain-ai/langconnect).
-- **MCP Tools**: Connect your agents to external tools through MCP servers.
-- **Agent Supervision**: Orchestrate multiple agents working together through an Agent Supervisor.
-- **Authentication**: Built-in authentication and access control.
-- **Configurable Agents**: Easily define how users can configure your agents through a rich UI.
+* **Agent Management**: Build, configure, and interact with agents through an intuitive interface.
+* **RAG Integration**: First-class support for Retrieval Augmented Generation with [LangConnect](https://github.com/langchain-ai/langconnect).
+* **MCP Tools**: Connect your agents to external tools through MCP servers.
+* **Agent Supervision**: Orchestrate multiple agents working together through an Agent Supervisor.
+* **Authentication**: Built-in authentication and access control.
+* **Configurable Agents**: Easily define how users can configure your agents through a rich UI.
 
 ## Documentation
 
@@ -27,8 +27,8 @@ To quickly get started with Open Agent Platform, check out the [Quickstart Guide
 
 ## Community and Support
 
-- **GitHub Issues**: Report bugs or request features [here](https://github.com/langchain-ai/open-agent-platform/issues).
-- **Discussions**: Join the conversation on our [GitHub Discussions page](https://github.com/langchain-ai/open-agent-platform/discussions).
+* **GitHub Issues**: Report bugs or request features [here](https://github.com/langchain-ai/open-agent-platform/issues).
+* **Discussions**: Join the conversation on our [GitHub Discussions page](https://github.com/langchain-ai/open-agent-platform/discussions).
 
 We encourage you to explore the platform, build your own agents, and contribute to the Open Agent Platform community!
 
@@ -54,7 +54,7 @@ Yes! See the [Building Your Own Agents](https://docs.langchain.com/labs/oap/cust
 
 ### How can I use non-supabase auth?
 
-Yes! It requires some modifications to be made to the code, but we've implemented authentication in a way which makes it easy to swap out with any other authentication provider. 
+Yes! It requires some modifications to be made to the code, but we've implemented authentication in a way which makes it easy to swap out with any other authentication provider.
 
 ### How can I use non-langgraph agents?
 
@@ -65,3 +65,33 @@ No. All agents you intend to use with OAP must be LangGraph agents, deployed on 
 First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
 
 If it's still not working, confirm your `x_oap_ui_config` metadata has the proper fields set.
+
+# Getting Local Started
+
+* Start RAG Capability
+
+```
+/Users/observed/development/langconnect
+docker-compose up -d
+
+# Also useful:
+docker-compose up -d --force-recreate api
+```
+
+1. Start the agents:
+
+```
+cd /Users/observed/development/oap-langgraph-tools-agent
+source .venv/bin/activate
+uv run langgraph dev --no-browser
+```
+
+* Start the main OPA server
+
+```
+cd /Users/observed/development/open-agent-platform/apps/web
+yarn dev
+```
+
+*
+
