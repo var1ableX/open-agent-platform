@@ -7,6 +7,7 @@ import React, {
   useState,
   useEffect,
   useRef,
+  useMemo,
 } from "react";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
@@ -142,7 +143,31 @@ async function getAgents(
     },
   );
 
-  return (await Promise.all(agentsPromise)).flat();
+  const results = await Promise.allSettled(agentsPromise);
+
+  // Filter out failed deployments and log warnings
+  const successfulAgents: Agent[] = [];
+  results.forEach((result, index) => {
+    const deployment = deployments[index];
+    if (result.status === "fulfilled") {
+      successfulAgents.push(...result.value);
+    } else {
+      // If the default deployment fails, throw an error
+      if (deployment.isDefault) {
+        throw new Error(
+          `Failed to connect to default deployment '${deployment.id}'. ` +
+            `Please ensure the default agent is running. Error: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+        );
+      }
+      // For non-default deployments, just log a warning
+      console.warn(
+        `Failed to load agents from deployment '${deployment.id}' (non-critical):`,
+        result.reason,
+      );
+    }
+  });
+
+  return successfulAgents;
 }
 
 type AgentsContextType = {
@@ -172,7 +197,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const { session } = useAuthContext();
   const agentsState = useAgents();
-  const deployments = getDeployments();
+  const deployments = useMemo(() => getDeployments(), []);
   const [agents, setAgents] = useState<Agent[]>([]);
   const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
@@ -193,8 +218,19 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       .then((a) =>
         setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a))),
       )
+      .catch((error) => {
+        console.error("Failed to load agents:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load agents",
+          {
+            richColors: true,
+            duration: 10000,
+          },
+        );
+      })
       .finally(() => setLoading(false));
-  }, [session?.accessToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.accessToken, deployments, agentsState.getAgentConfigSchema]);
 
   async function refreshAgents() {
     if (!session?.accessToken) {
@@ -213,6 +249,10 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
     } catch (e) {
       console.error("Failed to refresh agents", e);
+      toast.error(e instanceof Error ? e.message : "Failed to refresh agents", {
+        richColors: true,
+        duration: 10000,
+      });
     } finally {
       setRefreshAgentsLoading(false);
     }
