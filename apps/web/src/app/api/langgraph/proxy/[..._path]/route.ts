@@ -47,7 +47,11 @@ type RequestParams = {
  *                   false otherwise.
  */
 function isProxyRouteEnabled() {
-  return process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true";
+  // Enable proxy routes when:
+  // 1. Explicitly configured with NEXT_PUBLIC_USE_LANGSMITH_AUTH="true", OR
+  // 2. LANGSMITH_API_KEY is available (for remote access support)
+  return process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true" || 
+         !!process.env.LANGSMITH_API_KEY;
 }
 
 /**

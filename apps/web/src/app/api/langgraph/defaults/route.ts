@@ -11,6 +11,12 @@ function createServerClient(deploymentId: string, accessToken?: string) {
     throw new Error(`Deployment ${deploymentId} not found`);
   }
 
+  console.warn("[Defaults API] Creating client with:", {
+    deploymentId,
+    authType: accessToken ? "user-auth" : "langsmith-auth",
+    deploymentUrl: deployment.deploymentUrl,
+  });
+
   if (!accessToken) {
     // Use LangSmith auth
     const client = new Client({
@@ -45,6 +51,12 @@ async function getOrCreateDefaultAssistants(
   if (!deployment) {
     throw new Error(`Deployment ${deploymentId} not found`);
   }
+
+  console.warn("[Defaults API] Connecting to deployment:", {
+    deploymentId: deployment.id,
+    deploymentUrl: deployment.deploymentUrl,
+    name: deployment.name,
+  });
 
   // Do NOT pass in an access token here. We want to use LangSmith auth.
   const lsAuthClient = createServerClient(deploymentId);
@@ -124,6 +136,13 @@ export async function GET(req: NextRequest) {
       .get("Authorization")
       ?.replace("Bearer ", "");
 
+    console.warn("[Defaults API] Request received:", {
+      deploymentId,
+      hasAccessToken: !!accessToken,
+      origin: req.headers.get("origin"),
+      host: req.headers.get("host"),
+    });
+
     if (!deploymentId) {
       return new Response(
         JSON.stringify({ error: "Missing deploymentId parameter" }),
@@ -144,7 +163,11 @@ export async function GET(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error getting default assistants:", error);
+    console.error("[Defaults API] Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.constructor.name : typeof error,
+    });
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Unknown error",

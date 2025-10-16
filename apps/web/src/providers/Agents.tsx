@@ -273,6 +273,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 };
 
 // Create a custom hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAgentsContext = (): AgentsContextType => {
   const context = useContext(AgentsContext);
   if (context === undefined) {

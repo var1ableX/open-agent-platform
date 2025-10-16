@@ -7,15 +7,35 @@ export function createClient(deploymentId: string, accessToken?: string) {
     throw new Error(`Deployment ${deploymentId} not found`);
   }
 
-  if (!accessToken || process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true") {
+  // Always use proxy route in browser to avoid localhost issues on remote devices
+  if (typeof window !== "undefined") {
     const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
     if (!baseApiUrl) {
       throw new Error(
         "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
       );
     }
+    
+    // Convert relative URL to absolute URL for LangGraph Client
+    const absoluteApiUrl = new URL(
+      `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
+      window.location.origin
+    ).toString();
+    
     const client = new Client({
-      apiUrl: `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
+      apiUrl: absoluteApiUrl,
+      defaultHeaders: {
+        "x-auth-scheme": "langsmith",
+      },
+    });
+    return client;
+  }
+
+  // Server-side: use direct connection
+  if (!accessToken || process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true") {
+    const client = new Client({
+      apiUrl: deployment.deploymentUrl,
+      apiKey: process.env.LANGSMITH_API_KEY,
       defaultHeaders: {
         "x-auth-scheme": "langsmith",
       },
