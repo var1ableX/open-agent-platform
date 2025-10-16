@@ -85,7 +85,9 @@ async function uploadDocuments(
   authorization: string,
   metadatas?: Record<string, any>[],
 ): Promise<any> {
-  const url = `${getApiUrlOrThrow().href}collections/${encodeURIComponent(collectionId)}/documents`;
+  const url = getApiUrlOrThrow();
+  url.pathname = `/collections/${encodeURIComponent(collectionId)}/documents`;
+  
 
   const formData = new FormData();
 
@@ -107,7 +109,11 @@ async function uploadDocuments(
   }
 
   try {
-    const response = await fetch(url, {
+    console.warn("Upload request URL:", url.toString());
+    console.warn("Upload request files:", files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    console.warn("Upload request metadatas:", metadatas);
+    
+    const response = await fetch(url.toString(), {
       method: "POST",
       body: formData,
       headers: {
@@ -120,6 +126,7 @@ async function uploadDocuments(
       let errorDetail = `HTTP error! status: ${response.status}`;
       try {
         const errorJson = await response.json();
+        console.error("Upload error response:", errorJson);
         errorDetail = errorJson.detail || JSON.stringify(errorJson);
       } catch (_) {
         // If parsing JSON fails, use the status text

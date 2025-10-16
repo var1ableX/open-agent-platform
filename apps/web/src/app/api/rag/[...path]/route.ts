@@ -4,6 +4,11 @@ import { NextRequest } from "next/server";
 // This should always point to localhost:8080 (where LangConnect is running)
 const RAG_SERVER_URL = process.env.RAG_SERVER_URL || "http://localhost:8080";
 
+// Configure route segment to handle large file uploads
+export const runtime = "nodejs"; // Use Node.js runtime for better file handling
+export const dynamic = "force-dynamic"; // Don't cache responses
+export const maxDuration = 60; // Allow up to 60 seconds for large file uploads
+
 /**
  * Proxy route for RAG server requests to handle CORS and remote access
  */
@@ -70,9 +75,10 @@ async function handleRagRequest(
     });
 
     // Get request body for POST/PUT requests
+    // Use arrayBuffer to preserve binary data (important for file uploads with FormData)
     let body: BodyInit | undefined;
     if (method === "POST" || method === "PUT") {
-      body = await req.text();
+      body = await req.arrayBuffer();
     }
 
     // Make the request to the RAG server
@@ -84,6 +90,11 @@ async function handleRagRequest(
 
     // Get response data
     const responseData = await response.text();
+    
+    // Log errors for debugging
+    if (!response.ok) {
+      console.error(`[RAG Proxy] Error response from ${fullTargetUrl}:`, response.status, responseData);
+    }
 
     // Forward the response with proper headers
     const responseHeaders = new Headers();
