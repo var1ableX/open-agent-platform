@@ -31,7 +31,7 @@ class ProxiedURL extends URL {
   // Override pathname setter to preserve base path
   set pathname(value: string) {
     // If value starts with /, combine it with base path
-    if (value.startsWith('/')) {
+    if (value.startsWith("/")) {
       super.pathname = this._basePath + value;
     } else {
       super.pathname = value;
@@ -50,17 +50,17 @@ function getApiUrlOrThrow(): URL {
       "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
     );
   }
-  
+
   const baseUrl = new URL(
     process.env.NEXT_PUBLIC_RAG_API_URL,
-    typeof window !== 'undefined' ? window.location.origin : undefined
+    typeof window !== "undefined" ? window.location.origin : undefined,
   );
-  
+
   // Check if we're using the proxy route (contains /api/rag)
-  if (baseUrl.pathname.includes('/api/rag')) {
+  if (baseUrl.pathname.includes("/api/rag")) {
     return new ProxiedURL(baseUrl.href);
   }
-  
+
   return baseUrl;
 }
 

@@ -1,12 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { ReactNode, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
@@ -18,39 +11,21 @@ import {
 } from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import {
-  ArrowDown,
-  LoaderCircle,
-  SquarePen,
-  AlertCircle,
-  Plus,
-} from "lucide-react";
+import { ArrowDown, LoaderCircle, AlertCircle } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
-import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useAgentsContext } from "@/providers/Agents";
-import {
-  isUserSpecifiedDefaultAgent,
-  requiresApiKeysButNotSet,
-} from "@/lib/agent-utils";
+import { requiresApiKeysButNotSet } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { MobileChatInput } from "./mobile-chat-input";
+import { DesktopChatInput } from "./desktop-chat-input";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -93,130 +68,11 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
-function NewThreadButton(props: { hasMessages: boolean }) {
-  const { agents, loading } = useAgentsContext();
-  const [open, setOpen] = useState(false);
-
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [_, setThreadId] = useQueryState("threadId");
-
-  const handleNewThread = useCallback(() => {
-    setThreadId(null);
-  }, [setThreadId]);
-
-  const isMac = useMemo(
-    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent),
-    [],
-  );
-
-  useLayoutEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        e.key.toLocaleLowerCase() === "o"
-      ) {
-        e.preventDefault();
-        handleNewThread();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewThread]);
-
-  const onAgentChange = useCallback(
-    (v: string | string[] | undefined) => {
-      const nextValue = Array.isArray(v) ? v[0] : v;
-      if (!nextValue) return;
-
-      const [agentId, deploymentId] = nextValue.split(":");
-      setAgentId(agentId);
-      setDeploymentId(deploymentId);
-      setThreadId(null);
-    },
-    [setAgentId, setDeploymentId, setThreadId],
-  );
-
-  const agentValue =
-    agentId && deploymentId ? `${agentId}:${deploymentId}` : undefined;
-
-  useEffect(() => {
-    if (agentValue || !agents.length) {
-      return;
-    }
-    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
-    if (defaultAgent) {
-      onAgentChange(
-        `${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`,
-      );
-    }
-  }, [agents, agentValue, onAgentChange]);
-
-  if (!props.hasMessages) {
-    return (
-      <AgentsCombobox
-        agents={agents}
-        agentsLoading={loading}
-        value={agentValue}
-        setValue={onAgentChange}
-        open={open}
-        setOpen={setOpen}
-        triggerAsChild
-        className="min-w-auto"
-      />
-    );
-  }
-
-  return (
-    <div className="flex rounded-md shadow-xs">
-      <AgentsCombobox
-        agents={agents}
-        agentsLoading={loading}
-        value={agentValue}
-        setValue={onAgentChange}
-        open={open}
-        setOpen={setOpen}
-        triggerAsChild
-        className="relative min-w-auto shadow-none focus-within:z-10"
-        style={{
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-          borderRight: 0,
-        }}
-        footer={
-          <div className="text-secondary-foreground bg-secondary flex gap-2 p-3 pr-10 pb-3 text-xs">
-            <SquarePen className="size-4 shrink-0" />
-            <span className="text-secondary-foreground mb-[1px] text-xs">
-              Selecting a different agent will create a new thread.
-            </span>
-          </div>
-        }
-      />
-
-      {props.hasMessages && (
-        <TooltipIconButton
-          size="lg"
-          className="relative size-9 p-4 shadow-none focus-within:z-10"
-          tooltip={
-            isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"
-          }
-          variant="outline"
-          onClick={handleNewThread}
-          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-        >
-          <SquarePen className="size-4" />
-        </TooltipIconButton>
-      )}
-    </div>
-  );
-}
-
 export function Thread() {
+  const isMobile = useIsMobile();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
-  const [threadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useQueryState("threadId");
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
@@ -240,6 +96,11 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+
+  // Handler for mobile new thread button
+  const handleNewThread = useCallback(() => {
+    setThreadId(null);
+  }, [setThreadId]);
 
   const lastError = useRef<string | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState("");
@@ -446,130 +307,49 @@ export function Thread() {
                   dragOver
                     ? "border-primary border-2 border-dotted"
                     : "border border-solid",
+                  isMobile && "p-4", // Add padding on mobile
                 )}
               >
-                <form
-                  onSubmit={handleSubmit}
-                  className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
-                >
-                  <ContentBlocksPreview
-                    blocks={contentBlocks}
-                    onRemove={removeBlock}
-                  />
-                  <textarea
-                    name="input"
-                    onChange={(e) => setHasInput(!!e.target.value.trim())}
+                {isMobile ? (
+                  <MobileChatInput
+                    onSubmit={handleSubmit}
                     onPaste={handlePaste}
-                    onKeyDown={(e) => {
-                      if (
-                        e.key === "Enter" &&
-                        !e.shiftKey &&
-                        !e.nativeEvent.isComposing
-                      ) {
-                        e.preventDefault();
-                        const el = e.target as HTMLElement | undefined;
-                        const form = el?.closest("form");
-                        form?.requestSubmit();
-                      }
-                    }}
-                    placeholder="Type your message..."
-                    className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
+                    onFileUpload={handleFileUpload}
+                    onNewThread={handleNewThread}
+                    hasInput={hasInput}
+                    setHasInput={setHasInput}
+                    contentBlocks={contentBlocks}
+                    onRemoveBlock={removeBlock}
+                    isLoading={isLoading}
+                    onStop={() => stream.stop()}
+                    hideToolCalls={hideToolCalls}
+                    setHideToolCalls={setHideToolCalls}
+                    hasMessages={hasMessages}
+                    disabled={
+                      isLoading ||
+                      requiresApiKeysButNotSet(deploymentId || "", hasApiKeys)
+                    }
                   />
-
-                  <div className="flex items-center gap-6 p-2 pt-4">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 space-x-2">
-                        <NewThreadButton hasMessages={hasMessages} />
-                        <Switch
-                          id="render-tool-calls"
-                          checked={hideToolCalls ?? false}
-                          onCheckedChange={setHideToolCalls}
-                        />
-                        <Label
-                          htmlFor="render-tool-calls"
-                          className="text-sm text-gray-600"
-                        >
-                          Hide Tool Calls
-                        </Label>
-                      </div>
-                    </div>
-                    <Label
-                      htmlFor="file-input"
-                      className="flex cursor-pointer"
-                    >
-                      <Plus className="size-5 text-gray-600" />
-                      <span className="text-sm text-gray-600">
-                        Upload PDF or Image
-                      </span>
-                    </Label>
-                    <input
-                      id="file-input"
-                      type="file"
-                      onChange={handleFileUpload}
-                      multiple
-                      accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-                      className="hidden"
-                    />
-                    {stream.isLoading ? (
-                      <Button
-                        key="stop"
-                        onClick={() => stream.stop()}
-                        className="ml-auto"
-                      >
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                        Cancel
-                      </Button>
-                    ) : (
-                      <div className="ml-auto">
-                        {requiresApiKeysButNotSet(
-                          deploymentId || "",
-                          hasApiKeys,
-                        ) ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="inline-block">
-                                  <Button
-                                    type="submit"
-                                    className="shadow-md transition-all"
-                                    disabled={
-                                      isLoading ||
-                                      (!hasInput &&
-                                        contentBlocks.length === 0) ||
-                                      requiresApiKeysButNotSet(
-                                        deploymentId || "",
-                                        hasApiKeys,
-                                      )
-                                    }
-                                  >
-                                    Send
-                                  </Button>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  API keys are required but not set. Please
-                                  provide them in the settings.
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <Button
-                            type="submit"
-                            className="shadow-md transition-all"
-                            disabled={
-                              isLoading ||
-                              (!hasInput && contentBlocks.length === 0)
-                            }
-                          >
-                            Send
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </form>
+                ) : (
+                  <DesktopChatInput
+                    onSubmit={handleSubmit}
+                    onPaste={handlePaste}
+                    onFileUpload={handleFileUpload}
+                    hasInput={hasInput}
+                    setHasInput={setHasInput}
+                    contentBlocks={contentBlocks}
+                    onRemoveBlock={removeBlock}
+                    isLoading={isLoading}
+                    onStop={() => stream.stop()}
+                    hideToolCalls={hideToolCalls}
+                    setHideToolCalls={setHideToolCalls}
+                    hasMessages={hasMessages}
+                    disabled={
+                      isLoading ||
+                      requiresApiKeysButNotSet(deploymentId || "", hasApiKeys)
+                    }
+                  />
+                )}
               </div>
             </div>
           }

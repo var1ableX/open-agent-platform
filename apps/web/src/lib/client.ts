@@ -15,13 +15,13 @@ export function createClient(deploymentId: string, accessToken?: string) {
         "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
       );
     }
-    
+
     // Convert relative URL to absolute URL for LangGraph Client
     const absoluteApiUrl = new URL(
       `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
-      window.location.origin
+      window.location.origin,
     ).toString();
-    
+
     const client = new Client({
       apiUrl: absoluteApiUrl,
       defaultHeaders: {

@@ -11,7 +11,7 @@ function getMCPUrlOrThrow() {
   //const url = new URL(process.env.NEXT_PUBLIC_BASE_API_URL);
   const url = new URL(
     process.env.NEXT_PUBLIC_BASE_API_URL,
-    typeof window !== 'undefined' ? window.location.origin : undefined
+    typeof window !== "undefined" ? window.location.origin : undefined,
   );
   url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
   return url;

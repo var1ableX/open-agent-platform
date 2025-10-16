@@ -7,22 +7,34 @@ const RAG_SERVER_URL = process.env.RAG_SERVER_URL || "http://localhost:8080";
 /**
  * Proxy route for RAG server requests to handle CORS and remote access
  */
-export async function GET(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params;
   return handleRagRequest(req, path, "GET");
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params;
   return handleRagRequest(req, path, "POST");
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params;
   return handleRagRequest(req, path, "PUT");
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params;
   return handleRagRequest(req, path, "DELETE");
 }
@@ -30,13 +42,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 async function handleRagRequest(
   req: NextRequest,
   pathSegments: string[],
-  method: string
+  method: string,
 ) {
   try {
     // Extract the path from the URL
     const path = pathSegments.join("/");
     const targetUrl = `${RAG_SERVER_URL}/${path}`;
-    
+
     // Get query parameters
     const url = new URL(req.url);
     const queryString = url.search;
@@ -48,9 +60,11 @@ async function handleRagRequest(
     const headers: HeadersInit = {};
     req.headers.forEach((value, key) => {
       // Forward important headers
-      if (key.toLowerCase() === 'authorization' || 
-          key.toLowerCase() === 'content-type' ||
-          key.toLowerCase() === 'accept') {
+      if (
+        key.toLowerCase() === "authorization" ||
+        key.toLowerCase() === "content-type" ||
+        key.toLowerCase() === "accept"
+      ) {
         headers[key] = value;
       }
     });
@@ -70,15 +84,24 @@ async function handleRagRequest(
 
     // Get response data
     const responseData = await response.text();
-    
+
     // Forward the response with proper headers
     const responseHeaders = new Headers();
-    responseHeaders.set("Content-Type", response.headers.get("Content-Type") || "application/json");
-    
+    responseHeaders.set(
+      "Content-Type",
+      response.headers.get("Content-Type") || "application/json",
+    );
+
     // Add CORS headers
     responseHeaders.set("Access-Control-Allow-Origin", "*");
-    responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    responseHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    responseHeaders.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    responseHeaders.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
 
     return new Response(responseData, {
       status: response.status,
@@ -92,7 +115,7 @@ async function handleRagRequest(
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

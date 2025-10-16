@@ -73,11 +73,11 @@ const StreamSession = ({
         "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
       );
     }
-    
+
     // Convert relative URL to absolute for streaming SDK
     deploymentUrl = new URL(
       `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
-      window.location.origin
+      window.location.origin,
     ).toString();
   }
 
