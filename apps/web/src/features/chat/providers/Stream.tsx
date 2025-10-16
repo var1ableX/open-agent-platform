@@ -73,7 +73,12 @@ const StreamSession = ({
         "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
       );
     }
-    deploymentUrl = `${baseApiUrl}/langgraph/proxy/${deploymentId}`;
+    
+    // Convert relative URL to absolute for streaming SDK
+    deploymentUrl = new URL(
+      `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
+      window.location.origin
+    ).toString();
   }
 
   const [threadId, setThreadId] = useQueryState("threadId");
@@ -194,7 +199,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     );
   }
 
-  const useProxyRoute = process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true";
+  // Always use proxy route in browser to avoid localhost issues on remote devices
+  const useProxyRoute = typeof window !== "undefined";
   if (!useProxyRoute && !session?.accessToken) {
     toast.error("Access token must be provided if not using proxy route");
     return null;
