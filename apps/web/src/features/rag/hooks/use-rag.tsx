@@ -14,13 +14,54 @@ export function getDefaultCollection(collections: Collection[]): Collection {
   );
 }
 
+/**
+ * Custom URL wrapper that preserves the base path when pathname is set.
+ * This is needed because setting url.pathname overwrites the entire path,
+ * losing the /api/rag prefix when using the proxy route.
+ */
+class ProxiedURL extends URL {
+  private _basePath: string;
+
+  constructor(url: string, base?: string) {
+    super(url, base);
+    // Extract and store the base path (e.g., "/api/rag")
+    this._basePath = this.pathname;
+  }
+
+  // Override pathname setter to preserve base path
+  set pathname(value: string) {
+    // If value starts with /, combine it with base path
+    if (value.startsWith('/')) {
+      super.pathname = this._basePath + value;
+    } else {
+      super.pathname = value;
+    }
+  }
+
+  // Override pathname getter to return the relative path
+  get pathname(): string {
+    return super.pathname;
+  }
+}
+
 function getApiUrlOrThrow(): URL {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
     throw new Error(
       "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
     );
   }
-  return new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+  
+  const baseUrl = new URL(
+    process.env.NEXT_PUBLIC_RAG_API_URL,
+    typeof window !== 'undefined' ? window.location.origin : undefined
+  );
+  
+  // Check if we're using the proxy route (contains /api/rag)
+  if (baseUrl.pathname.includes('/api/rag')) {
+    return new ProxiedURL(baseUrl.href);
+  }
+  
+  return baseUrl;
 }
 
 export function getCollectionName(name: string | undefined) {
