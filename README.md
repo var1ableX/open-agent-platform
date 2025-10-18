@@ -78,20 +78,11 @@ docker-compose up -d
 docker-compose up -d --force-recreate api
 ```
 
-1. Start the agents:
-
 ```
-cd /Users/observed/development/oap-langgraph-tools-agent
-source .venv/bin/activate
-uv run langgraph dev --no-browser
-```
-
-* Start the main OPA server
-
-```
-cd /Users/observed/development/open-agent-platform/apps/web
+1. source .venv/bin/activate
+2. Run the following in each respective agent.
+uv run langgraph dev --no-browser --port 2025
+uv run langgraph dev --no-browser --port 2026
+uvx --refresh --from "langgraph-cli[inmem]" --with-editable . --python 3.11 langgraph dev --allow-blocking
 yarn dev
 ```
-
-*
-

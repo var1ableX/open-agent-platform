@@ -181,6 +181,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       method: req.method,
       headers,
       body,
+      cache: "no-store",
     });
     // Clone the response to create a new one we can modify
     const responseClone = response.clone();
