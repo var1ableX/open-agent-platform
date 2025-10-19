@@ -182,6 +182,11 @@ type AgentsContextType = {
    */
   refreshAgents: () => Promise<void>;
   /**
+   * Updates a single agent in the local state (optimistic update).
+   * Use this after successfully updating an agent to avoid race conditions.
+   */
+  updateAgentInState: (updatedAgent: Agent) => void;
+  /**
    * Whether the agents list is currently loading.
    */
   loading: boolean;
@@ -246,9 +251,27 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
         session.accessToken,
         agentsState.getAgentConfigSchema,
       );
-      setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
+      const filteredAgents = newAgents.filter(
+        (a) => !isSystemCreatedDefaultAssistant(a),
+      );
+      console.warn("[REFRESH-AGENTS] Fetched agents:", {
+        count: filteredAgents.length,
+        agentIds: filteredAgents.map((a) => ({
+          id: a.assistant_id,
+          graphId: a.graph_id,
+          hasRagConfig: !!a.config?.configurable?.rag,
+          ragCollections: (a.config?.configurable?.rag as { collections?: string[] } | undefined)
+            ?.collections,
+        })),
+      });
+      setAgents(filteredAgents);
     } catch (e) {
       console.error("Failed to refresh agents", e);
+      // Silently handle JWT expiration errors - they're expected after token expires
+      if (e instanceof Error && e.message.includes("JWT")) {
+        console.warn("[REFRESH-AGENTS] JWT expired, skipping refresh");
+        return;
+      }
       toast.error(e instanceof Error ? e.message : "Failed to refresh agents", {
         richColors: true,
         duration: 10000,
@@ -258,10 +281,22 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
+  function updateAgentInState(updatedAgent: Agent) {
+    setAgents((prevAgents) =>
+      prevAgents.map((a) =>
+        a.assistant_id === updatedAgent.assistant_id &&
+        a.deploymentId === updatedAgent.deploymentId
+          ? updatedAgent
+          : a,
+      ),
+    );
+  }
+
   const agentsContextValue = {
     agents,
     loading,
     refreshAgents,
+    updateAgentInState,
     refreshAgentsLoading,
   };
 

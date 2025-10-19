@@ -120,6 +120,15 @@ export function useAgentConfig() {
           agentsConfig,
         );
 
+        console.warn("[AGENT-CONFIG] Form initialized with:", {
+          agentId: agent.assistant_id,
+          graphId: agent.graph_id,
+          ragLabel: ragConfig[0]?.label,
+          ragCollections: configurableDefaults[ragConfig[0]?.label]?.collections,
+          fromAgentConfig: agent.config?.configurable?.[ragConfig[0]?.label],
+          allConfigKeys: Object.keys(configurableDefaults),
+        });
+
         return {
           name: agent.name,
           description:
@@ -130,7 +139,12 @@ export function useAgentConfig() {
         setLoading(false);
       }
     },
-    [clearState, getAgentConfigSchema],
+    [
+      clearState,
+      getAgentConfigSchema,
+      chatWithCollectionId,
+      setChatWithCollectionId,
+    ],
   );
 
   return {

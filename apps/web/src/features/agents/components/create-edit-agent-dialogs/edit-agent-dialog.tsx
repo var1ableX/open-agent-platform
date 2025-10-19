@@ -32,7 +32,7 @@ function EditAgentDialogContent({
   onClose: () => void;
 }) {
   const { updateAgent, deleteAgent } = useAgents();
-  const { refreshAgents } = useAgentsContext();
+  const { refreshAgents, updateAgentInState } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
 
@@ -60,6 +60,16 @@ function EditAgentDialogContent({
       return;
     }
 
+    console.warn("[SAVE-AGENT] Saving config:", {
+      agentId: agent.assistant_id,
+      graphId: agent.graph_id,
+      configSize: JSON.stringify(data.config).length,
+      configKeys: Object.keys(data.config),
+      ragField: data.config.rag,
+      searchApiField: data.config.search_api, // Deep Research specific
+      allConfig: data.config, // Full payload for inspection
+    });
+
     const updatedAgent = await updateAgent(
       agent.assistant_id,
       agent.deploymentId,
@@ -75,8 +85,21 @@ function EditAgentDialogContent({
 
     toast.success("Agent updated successfully!");
 
+    // Immediately update the agent in local state with the response from backend
+    // This ensures the next time the edit dialog opens, it has the latest data
+    updateAgentInState({
+      ...updatedAgent,
+      deploymentId: agent.deploymentId,
+      supportedConfigs: agent.supportedConfigs,
+    });
+
     onClose();
-    refreshAgents();
+    
+    // Attempt to refresh agents list in background, but don't block on it
+    // If JWT expires during refresh, it will be silently handled
+    refreshAgents().catch(() => {
+      // Silently ignore errors - the optimistic update already succeeded
+    });
   };
 
   const handleDelete = async () => {

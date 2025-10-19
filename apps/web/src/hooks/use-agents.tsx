@@ -130,17 +130,33 @@ export function useAgents() {
       }
       try {
         const client = createClient(deploymentId, session.accessToken);
-        const agent = await client.assistants.update(agentId, {
-          metadata: {
-            ...(args.description && { description: args.description }),
-          },
-          ...(args.name && { name: args.name }),
-          ...(args.config && { config: { configurable: args.config } }),
-        });
+        
+        const TIMEOUT_MS = 15000; // 15 second timeout
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Update timed out after 15s")), TIMEOUT_MS)
+        );
+
+        const agent = await Promise.race([
+          client.assistants.update(agentId, {
+            metadata: {
+              ...(args.description && { description: args.description }),
+            },
+            ...(args.name && { name: args.name }),
+            ...(args.config && { config: { configurable: args.config } }),
+          }),
+          timeoutPromise,
+        ]);
+        
+        console.warn("[UPDATE-AGENT] Success:", { agentId: agent.assistant_id });
         return agent;
       } catch (e) {
-        console.error("Failed to update agent", e);
-        toast.error("Failed to update agent");
+        console.error("[UPDATE-AGENT] Failed:", {
+          error: e instanceof Error ? e.message : String(e),
+          agentId,
+        });
+        toast.error("Failed to update agent", {
+          description: e instanceof Error ? e.message : "Unknown error",
+        });
         return undefined;
       }
     },
