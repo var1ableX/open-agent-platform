@@ -61,13 +61,18 @@ export default function useMCP({
    */
   const getTools = async (nextCursor?: string): Promise<Tool[]> => {
     const mcp = await createAndConnectMCPClient();
-    const tools = await mcp.listTools({ cursor: nextCursor });
-    if (tools.nextCursor) {
-      setCursor(tools.nextCursor);
-    } else {
-      setCursor("");
+    try {
+      const tools = await mcp.listTools({ cursor: nextCursor });
+      if (tools.nextCursor) {
+        setCursor(tools.nextCursor);
+      } else {
+        setCursor("");
+      }
+      return tools.tools;
+    } finally {
+      // Always close the connection to prevent leaks
+      await mcp.close();
     }
-    return tools.tools;
   };
 
   /**
@@ -87,12 +92,17 @@ export default function useMCP({
     version?: string;
   }) => {
     const mcp = await createAndConnectMCPClient();
-    const response = await mcp.callTool({
-      name,
-      version,
-      arguments: args,
-    });
-    return response;
+    try {
+      const response = await mcp.callTool({
+        name,
+        version,
+        arguments: args,
+      });
+      return response;
+    } finally {
+      // Always close the connection to prevent leaks
+      await mcp.close();
+    }
   };
 
   return {
