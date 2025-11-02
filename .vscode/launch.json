@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start LangGraph API Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "/Users/observed/development/open_deep_research/.venv/bin/langgraph",
+      "args": [
+        "dev",
+        "--allow-blocking",
+        "--no-browser"
+      ],
+      "cwd": "/Users/observed/development/open_deep_research",
+      "python": "/Users/observed/development/open_deep_research/.venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Start Next.js Frontend Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "yarn dev",
+      "cwd": "/Users/observed/development/open-agent-platform/apps/web"
+    },
+    {
+      "name": "Launch Studio UI in Dev Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024",
+      "runtimeArgs": [
+        "--disable-features=PrivateNetworkAccessChecks"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug OAP (Full Stack)",
+      "configurations": [
+        "Start LangGraph API Server",
+        "Start Next.js Frontend Server",
+        "Launch Studio UI in Dev Chrome"
+      ],
+      "stopAll": true
+    }
+  ]
+}
