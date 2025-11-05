@@ -17,11 +17,24 @@
       "justMyCode": false
     },
     {
-      "name": "Start Next.js Frontend Server",
-      "type": "node-terminal",
+      "name": "Start & Debug Next.js Frontend",
+      "type": "pwa-node", // Use the modern Node debugger
       "request": "launch",
-      "command": "yarn dev",
-      "cwd": "/Users/observed/development/open-agent-platform/apps/web"
+      "runtimeExecutable": "yarn", // Tell it to use yarn
+      "runtimeArgs": [
+          "dev" // Tell yarn to run the "dev" script
+      ],
+      "cwd": "/Users/observed/development/open-agent-platform/apps/web",
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**", // Don't try to debug Node.js's own internal code
+        "${workspaceFolder}/node_modules/**" // Don't try to debug into node_modules
+      ],
+      "serverReadyAction": {
+        "pattern": "started server on .+, url: (https?://.+)",
+        "uriFormat": "%s",
+        "action": "openExternally" // Automatically open the browser
+      }
     },
     {
       "name": "Launch Studio UI in Dev Chrome",
@@ -38,7 +51,7 @@
       "name": "Debug OAP (Full Stack)",
       "configurations": [
         "Start LangGraph API Server",
-        "Start Next.js Frontend Server",
+        "Start & Debug Next.js Frontend", // Name updated for clarity
         "Launch Studio UI in Dev Chrome"
       ],
       "stopAll": true
