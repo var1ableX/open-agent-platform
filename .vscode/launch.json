@@ -9,7 +9,8 @@
       "args": [
         "dev",
         "--allow-blocking",
-        "--no-browser"
+        "--no-browser",
+        "--port", "2027"
       ],
       "cwd": "/Users/observed/development/open_deep_research",
       "python": "/Users/observed/development/open_deep_research/.venv/bin/python",
@@ -40,7 +41,7 @@
       "name": "Launch Studio UI in Dev Chrome",
       "type": "chrome",
       "request": "launch",
-      "url": "https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024",
+      "url": "https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2027",
       "runtimeArgs": [
         "--disable-features=PrivateNetworkAccessChecks"
       ]
