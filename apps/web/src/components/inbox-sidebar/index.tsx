@@ -100,7 +100,9 @@ function InboxSidebarInternal() {
                     {deployments.map((deployment: Deployment) => {
                       // Filter agents for the current deployment
                       const deploymentAgents = agents.filter(
-                        (agent) => agent.deploymentId === deployment.id,
+                        (agent) =>
+                          agent.deploymentId.toLowerCase() ===
+                          deployment.id.toLowerCase(),
                       );
 
                       // Skip deployments with no agents

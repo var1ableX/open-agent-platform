@@ -88,6 +88,10 @@ function configSchemaToConfigurableFields(
 
 function configSchemaToToolsConfig(
   schema: GraphSchema["config_schema"],
+  runtimeEnv?: {
+    mcpServerUrl: string | null;
+    mcpAuthRequired: boolean;
+  },
 ): ConfigurableFieldMCPMetadata[] {
   if (!schema || !schema.properties) {
     return [];
@@ -100,10 +104,17 @@ function configSchemaToToolsConfig(
       continue;
     }
 
-    if (!process.env.NEXT_PUBLIC_MCP_SERVER_URL) {
-      toast.error("Can not configure MCP tool without MCP server URL", {
-        richColors: true,
-      });
+    // Use runtime env values if provided, otherwise fall back to process.env (for backward compatibility)
+    const mcpServerUrl = runtimeEnv?.mcpServerUrl ?? process.env.NEXT_PUBLIC_MCP_SERVER_URL ?? null;
+    const mcpAuthRequired = runtimeEnv?.mcpAuthRequired ?? (process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true");
+
+    if (!mcpServerUrl) {
+      // Only show error if we're not using runtime env (to avoid spamming errors during loading)
+      if (!runtimeEnv) {
+        toast.error("Can not configure MCP tool without MCP server URL", {
+          richColors: true,
+        });
+      }
       continue;
     }
 
@@ -111,9 +122,9 @@ function configSchemaToToolsConfig(
       label: key,
       type: uiConfig.type,
       default: {
-        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        url: mcpServerUrl,
         tools: [],
-        auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
+        auth_required: mcpAuthRequired,
         ...(uiConfig.default ?? {}),
       },
     });
@@ -123,6 +134,9 @@ function configSchemaToToolsConfig(
 
 function configSchemaToRagConfig(
   schema: GraphSchema["config_schema"],
+  runtimeEnv?: {
+    ragApiUrl: string | null;
+  },
 ): ConfigurableFieldRAGMetadata | undefined {
   if (!schema || !schema.properties) {
     return undefined;
@@ -135,10 +149,16 @@ function configSchemaToRagConfig(
       continue;
     }
 
+    // Use runtime env values if provided, otherwise fall back to process.env (for backward compatibility)
+    const ragApiUrl = runtimeEnv?.ragApiUrl ?? process.env.NEXT_PUBLIC_RAG_API_URL ?? null;
+
     ragField = {
       label: key,
       type: uiConfig.type,
-      default: uiConfig.default,
+      default: {
+        ...uiConfig.default,
+        rag_url: ragApiUrl ?? uiConfig.default?.rag_url,
+      },
     };
     break;
   }
@@ -179,13 +199,24 @@ type ExtractedConfigs = {
 export function extractConfigurationsFromAgent({
   agent,
   schema,
+  runtimeEnv,
 }: {
   agent: Assistant;
   schema: GraphSchema["config_schema"];
+  runtimeEnv?: {
+    mcpServerUrl: string | null;
+    mcpAuthRequired: boolean;
+    ragApiUrl: string | null;
+  };
 }): ExtractedConfigs {
   const configFields = configSchemaToConfigurableFields(schema);
-  const toolConfig = configSchemaToToolsConfig(schema);
-  const ragConfig = configSchemaToRagConfig(schema);
+  const toolConfig = configSchemaToToolsConfig(schema, runtimeEnv ? {
+    mcpServerUrl: runtimeEnv.mcpServerUrl,
+    mcpAuthRequired: runtimeEnv.mcpAuthRequired,
+  } : undefined);
+  const ragConfig = configSchemaToRagConfig(schema, runtimeEnv ? {
+    ragApiUrl: runtimeEnv.ragApiUrl,
+  } : undefined);
   const agentsConfig = configSchemaToAgentsConfig(schema);
 
   const configFieldsWithDefaults = configFields.map((f) => {
@@ -200,16 +231,33 @@ export function extractConfigurationsFromAgent({
     agent.config?.configurable ?? ({} as Record<string, any>);
 
   const configToolsWithDefaults = toolConfig.map((f) => {
-    const defaultConfig = (configurable[f.label] ??
-      f.default) as ConfigurableFieldMCPMetadata["default"];
+    const storedConfig = configurable[f.label] as ConfigurableFieldMCPMetadata["default"] | undefined;
+    const defaultConfig = storedConfig ?? f.default;
+    
+    // Use runtime env for auth_required if available, otherwise fall back to process.env
+    const mcpAuthRequired = runtimeEnv?.mcpAuthRequired ?? (process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true");
+    
+    // If we have runtime env values, check if stored config URL differs from current env
+    // If it does, prefer the runtime env URL (current .env value) over stored config
+    let finalConfig = defaultConfig;
+    if (runtimeEnv?.mcpServerUrl && storedConfig?.url && storedConfig.url !== runtimeEnv.mcpServerUrl) {
+      // Stored config has different URL than current env - use current env URL
+      finalConfig = {
+        ...storedConfig,
+        url: runtimeEnv.mcpServerUrl,
+        auth_required: mcpAuthRequired,
+      };
+    } else if (defaultConfig) {
+      // Use stored/default config but ensure auth_required is current
+      finalConfig = {
+        ...defaultConfig,
+        auth_required: mcpAuthRequired,
+      };
+    }
+    
     return {
       ...f,
-      default: defaultConfig
-        ? {
-            ...defaultConfig,
-            auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
-          }
-        : undefined,
+      default: finalConfig,
     };
   });
 
@@ -227,6 +275,7 @@ export function extractConfigurationsFromAgent({
             [],
           rag_url:
             configurable[ragConfig.label]?.rag_url ??
+            runtimeEnv?.ragApiUrl ??
             process.env.NEXT_PUBLIC_RAG_API_URL,
         },
       }

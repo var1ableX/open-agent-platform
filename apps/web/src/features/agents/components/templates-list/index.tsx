@@ -28,7 +28,8 @@ export function TemplatesList() {
     const groups: GraphGroup[] = [];
     deployments.forEach((deployment) => {
       const agentsInDeployment = agents.filter(
-        (agent) => agent.deploymentId === deployment.id,
+        (agent) =>
+          agent.deploymentId.toLowerCase() === deployment.id.toLowerCase(),
       );
       const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
       agentsGroupedByGraphs.forEach((agentGroup) => {

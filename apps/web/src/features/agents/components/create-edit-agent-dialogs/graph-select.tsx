@@ -36,7 +36,8 @@ export function GraphSelect({
   const deployments = getDeployments();
   const graphs = deployments.flatMap((deployment) => {
     const deploymentAgents = agents.filter(
-      (agent) => agent.deploymentId === deployment.id,
+      (agent) =>
+        agent.deploymentId.toLowerCase() === deployment.id.toLowerCase(),
     );
     // Group filtered agents by graph (still needed for sorting/grouping logic)
     const agentsGroupedByGraphs = groupAgentsByGraphs(deploymentAgents);

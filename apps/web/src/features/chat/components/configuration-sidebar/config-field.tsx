@@ -577,7 +577,7 @@ export function ConfigFieldAgents({
     const newDefaults = ids.map((id) => {
       const [agent_id, deploymentId] = id.split(":");
       const deployment_url = deployments.find(
-        (d) => d.id === deploymentId,
+        (d) => d.id.toLowerCase() === deploymentId.toLowerCase(),
       )?.deploymentUrl;
       if (!deployment_url) {
         toast.error("Deployment not found");

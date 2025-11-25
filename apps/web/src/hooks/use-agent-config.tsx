@@ -13,6 +13,7 @@ import {
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
 import { useQueryState } from "nuqs";
+import { useRuntimeEnv } from "./use-runtime-env";
 
 /**
  * A custom hook for managing and accessing the configurable
@@ -23,6 +24,7 @@ export function useAgentConfig() {
   const [chatWithCollectionId, setChatWithCollectionId] = useQueryState(
     "chatWithCollectionId",
   );
+  const { values: runtimeEnv, loading: envLoading } = useRuntimeEnv();
 
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
@@ -60,6 +62,8 @@ export function useAgentConfig() {
 
       setLoading(true);
       try {
+        // Wait for runtime env values to be available (if still loading, proceed anyway with fallback)
+        // This ensures we use current env values when available
         const schema = await getAgentConfigSchema(
           agent.assistant_id,
           agent.deploymentId,
@@ -75,6 +79,11 @@ export function useAgentConfig() {
           extractConfigurationsFromAgent({
             agent,
             schema,
+            runtimeEnv: runtimeEnv ? {
+              mcpServerUrl: runtimeEnv.mcpServerUrl,
+              mcpAuthRequired: runtimeEnv.mcpAuthRequired,
+              ragApiUrl: runtimeEnv.ragApiUrl,
+            } : undefined,
           });
 
         const agentId = agent.assistant_id;
@@ -157,6 +166,6 @@ export function useAgentConfig() {
     agentsConfigurations,
     supportedConfigs,
 
-    loading,
+    loading: loading || envLoading,
   };
 }
