@@ -153,6 +153,7 @@ export function useAgentConfig() {
       getAgentConfigSchema,
       chatWithCollectionId,
       setChatWithCollectionId,
+      runtimeEnv,
     ],
   );
 
